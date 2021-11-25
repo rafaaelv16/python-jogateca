@@ -1,0 +1,184 @@
+Flask é um MicroFramework
+
+1 - Criar um novo projeto no PyCharm que se chamará Jogoteca
+
+2 - instalar o pacote flask na versão 0.12.2
+	pip install flask==0.12.2
+
+3 - Criamos um arquivo chamado jogoteca.py, e nele:
+	1 - Importamos a classe flask do pacote flask
+		from flask import Flask
+
+	2 - instanciamos um objeto do tipo flask, com o parâmetro obrigatório import name, que é o nome do módulo que estamos executando
+
+		app = Flask(__name__)
+
+		obs.: podemos testá-lo rodando: app.run()
+
+	3 - Criamos uma funcção pra retornar um texto:
+		def ola():
+			return '<h1>Olá Flask</h1>'
+
+	4 - Adicionamos uma rota com sua configuração, acima da funcção olá colocamos:
+		@app.route('/inicio')
+
+4 - Agora devemos mostrar o html no python não usando o cófigo html dentro do python. Para isso usamos o render_template;
+
+	1 - importamos o pacote:
+		from flask import render_template
+
+	2 - Criamos uma pasta onde terá nosso arquivos dinâmicos em html, lá colocamnos o arquivo lista.html, com o seguinte código:
+		<!DOCTYPE html>
+		<html>
+		  <head>
+		    <meta charset="utf-8">
+		    <meta name="viewport" content="width=device-width, initial-scale=1">
+		    <title>Jogoteca</title>
+		  </head>
+		  <body>
+		    <div class="container">
+		        <div class="page-header">
+		            <h1>Jogoteca</h1>
+		        </div>
+		        <table class="table table-striped table-responsive table-bordered">
+		            <thead class="thead-default">
+		                <tr>
+		                    <th>Nome</th>
+		                </tr>
+		            </thead>
+		            <tbody>
+		                <tr>
+		                    <td>God of War</td>
+		                </tr>
+		                <tr>
+		                    <td>Pokemon Silver</td>
+		                </tr>
+		                <tr>
+		                    <td>Super Mario RPG</td>
+		                </tr>
+		            </tbody>
+		        </table>
+		    </div>
+		  </body>
+		</html>
+
+5 - Tornando o conteúdo do HTML dinâmico com o Flask:
+	1 - Título da lista dinâmica
+		1 - No arquivo HTML, onde será o conteúdo dinâmico, definimos o nome do campo que será recebido, no nosso caso será o titulo, e devemos colocá-lo dentro de duas Chaves:
+
+			{{ titulo }}
+
+		2 - na funcção que renderiza nossa página, dentro da função render_template definimos o valor do campo que será passado ao html, titulo = 'Jogos':
+			return render_template('lista.html', titulo = 'Jogos')
+
+	2 - Jogos dinâmicos, Faremos isso pra não ter que criar cada elemento na mão em html
+
+		1 - fora da função ola, criamos uma lista contendo os nossos jogos:
+			lista = ['Tetris','Dominó','Cartas']
+
+		2 - dentro da função render, criamos uma variável que vai receber a nossa lista:
+			return render_template('lista.html', titulo = 'Jogos',jogos = lista)
+
+		3 - No nosso html trazemos o conteúdo dinâmico onde teriam cada linha da tabela, precisaremos usar um for pra pegar cada um dos elementos da lista jogos. Ficando da seguinte forma:
+
+			{% for jogo in jogos %}
+                <tr>
+                    <td>{{ jogo }}</td>
+                </tr>
+            {% endfor %}
+
+6 - Criando a classe Jogo
+	1 - precismos pra definir os atributos que cada jogo terá:
+		class Jogo:
+			def __init__(self,nome, categoria,console):
+				self.nome = nome
+				self.categoria = categoria
+				self.console = console
+
+	2 - criamos os objetos e instanciamos e depois adicionamos os mesmos a lista:
+		tetris = Jogo('Tetris','diversao','pc')
+		domino = Jogo('Dominó','mesa','Play 1')
+		cartas = Jogo('Cartas','mesa','Xbox')
+
+	3 - Mudamos o nosso html:
+
+		<td>{{ jogo.nome }}</td>
+        <td>{{ jogo.categoria }}</td>
+        <td>{{ jogo.console }}</td>
+
+7 - Criando um novo jogo
+	1 - Para isso devemos criar um novo html dentro de templates: novo.html, e entrar com o código:
+		<!DOCTYPE html>
+		<html>
+		<head>
+		    <meta charset="utf-8">
+		    <meta name="viewport" content="width=device-width, initial-scale=1">
+		    <title>Jogoteca</title>
+		</head>
+		<body>
+		    <div class="container">
+		      <div class="page-header">
+		          <h1>{{ titulo }}</h1>
+		      </div>
+		      <form>
+		        <fieldset>
+		          <div class="form-group">
+		            <label for="nome">Nome</label>
+		            <input type="text" id="nome" name="nome" class="form-control">
+		          </div>
+		          <div class="form-group">
+		            <label for="categoria">Categoria</label>
+		            <input type="text" id="categoria" name="categoria" class="form-control">
+		          </div>
+		          <div class="form-group">
+		            <label for="console">Console</label>
+		            <input type="text" id="console" name="console" class="form-control">
+		          </div>
+		          <button type="submit" class="btn btn-primary btn-salvar">Salvar</button>
+		        </fieldset>
+		      </form>
+		    </div>
+		</body>
+		</html>
+
+	2 - Adicionar uma rota pra que seja possível acessar esse html.
+
+		@app.route('/novo')
+		def novo():
+			return render_template('novo.html', titulo = 'Novo Jogo')
+
+
+	3 - Mudando o método de GET pra POST pra não mostrar os dados, e tratando nossa requisição:
+		1 - primeiro devemos apontar pra onde vai nossa requisição, no forms vamos adicionar:
+			action="/criar"
+
+		2 - e passamos o método do forms que será para esconder os dados:
+			method="post"
+
+		3 - Criando a rota pra tratar os dados preenchidos(/criar)
+
+			1 - Devemos importar o request, que é quem trás os dados capturados no formulário
+				from flask import request
+
+			2 - Criamos a rota, como usaremos o method post nessa rota, devemos explicitar isso atavés do código: methods=['POST',]
+				@app.route('/criar',methods=['POST',])
+				def criar():
+					#vamos atribuir a variável nome o campo do input de novo.html com o name = nome
+				    nome = request.form['nome']
+
+				    #faremos o mesmo pra categoria e console
+				    categoria = request.form['categoria']
+
+				    console = request.form['console']
+
+				    #criamos e instanciamos um objeto com os dados recebidos
+				    jogo = Jogo(nome,categoria,console)
+
+				    #e depois adicionamos o objeto a nossa lista de jogos
+				    jogos.append(jogo)
+
+				    #agora precisamos retornar algo pra informar ao usuário que a ação funcionou, nesse caso mostraremos a listagem dos jogos, precisamos importar o redirect do pacote flask
+				    return redirect('/')
+
+obs.: para não precisar ficar toda hora restartando o server, podemos passar o parâmento debug=True no app.run()
+	app.run(debug=True)
